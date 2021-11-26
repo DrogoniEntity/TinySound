@@ -28,6 +28,8 @@ package kuusisto.tinysound.internal;
 
 import kuusisto.tinysound.Music;
 import kuusisto.tinysound.TinySound;
+import kuusisto.tinysound.event.EventAction;
+import kuusisto.tinysound.event.MusicEvent;
 
 /**
  * The MemMusic class is an implementation of the Music interface that stores
@@ -292,7 +294,7 @@ public class MemMusic implements Music {
 	 * 
 	 * @author Finn Kuusisto
 	 */
-	private static class MemMusicReference implements MusicReference {
+	private class MemMusicReference implements MusicReference {
 
 		private byte[] left;
 		private byte[] right;
@@ -388,6 +390,9 @@ public class MemMusic implements Music {
 		 */
 		@Override
 		public synchronized void setPlaying(boolean playing) {
+    		        //fire event when value changed !
+    		        if (this.playing != playing)
+    		                this.fireEvent(playing ? EventAction.PLAY : EventAction.STOP);
 			this.playing = playing;
 		}
 		
@@ -476,7 +481,7 @@ public class MemMusic implements Music {
 						this.position = this.loopPosition;
 					}
 					else {
-						this.playing = false;
+						this.setPlaying(false);
 					}
 				}
 			}
@@ -514,7 +519,7 @@ public class MemMusic implements Music {
 					this.position = this.loopPosition;
 				}
 				else {
-					this.playing = false;
+					this.setPlaying(false);
 				}
 			}
 		}
@@ -525,10 +530,16 @@ public class MemMusic implements Music {
 		 */
 		@Override
 		public synchronized void dispose() {
-			this.playing = false;
+			this.setPlaying(false);
 			this.position = this.left.length + 1;
 			this.left = null;
 			this.right = null;
+		}
+		
+		private void fireEvent(EventAction action)
+		{
+		    MusicEvent event = new MusicEvent(MemMusic.this, action);
+                    MemMusic.this.mixer.getEventHandler().fireMusicEvent(event);
 		}
 		
 	}

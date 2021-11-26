@@ -29,6 +29,8 @@ package kuusisto.tinysound.internal;
 import java.util.ArrayList;
 import java.util.List;
 
+import kuusisto.tinysound.event.EventAction;
+
 /**
  * The Mixer class is what does the audio data mixing for the TinySound system.
  * Mixer is an internal class of the TinySound system and should be of no real
@@ -43,14 +45,17 @@ public class Mixer {
 	private double globalVolume;
 	private int[] dataBuf; //buffer for reading sound data
 	
+	private final EventHandler eventHandler;
+	
 	/**
 	 * Construct a new Mixer for TinySound system.
 	 */
-	public Mixer() {
+	public Mixer(EventHandler eventHandler) {
 		this.musics = new ArrayList<MusicReference>();
 		this.sounds = new ArrayList<SoundReference>();
 		this.globalVolume = 1.0;
 		this.dataBuf = new int[2]; //2-channel
+		this.eventHandler = eventHandler;
 	}
 	
 	/**
@@ -84,6 +89,7 @@ public class Mixer {
 	 * @param sound SoundReference to be registered
 	 */
 	public synchronized void registerSoundReference(SoundReference sound) {
+	        sound.fireEvent(this.eventHandler, EventAction.PLAY);
 		this.sounds.add(sound);
 	}
 	
@@ -203,10 +209,12 @@ public class Mixer {
 					bytesRead = true;
 					//remove the reference if done
 					if (sound.bytesAvailable() <= 0) {
+					        sound.fireEvent(this.eventHandler, EventAction.STOP);
 						this.sounds.remove(s).dispose();
 					}
 				}
 				else { //otherwise remove this reference
+				        sound.fireEvent(this.eventHandler, EventAction.STOP);
 					this.sounds.remove(s).dispose();
 				}
 			}
@@ -262,6 +270,7 @@ public class Mixer {
 				sound.skipBytes(numBytes);
 				//remove the reference if done
 				if (sound.bytesAvailable() <= 0) {
+				        sound.fireEvent(this.eventHandler, EventAction.STOP);
 					this.sounds.remove(s).dispose();
 				}
 			}
@@ -271,4 +280,8 @@ public class Mixer {
 		}
 	}
 
+	public EventHandler getEventHandler()
+	{
+	    return this.eventHandler;
+	}
 }

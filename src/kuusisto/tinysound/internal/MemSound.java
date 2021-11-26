@@ -27,6 +27,8 @@
 package kuusisto.tinysound.internal;
 
 import kuusisto.tinysound.Sound;
+import kuusisto.tinysound.event.EventAction;
+import kuusisto.tinysound.event.SoundEvent;
 
 /**
  * The MemSound class is an implementation of the Sound interface that stores
@@ -119,7 +121,7 @@ public class MemSound implements Sound {
 	 * 
 	 * @author Finn Kuusisto
 	 */
-	private static class MemSoundReference implements SoundReference {
+	private class MemSoundReference implements SoundReference {
 
 		public final int SOUND_ID; //parent MemSound
 		
@@ -231,6 +233,12 @@ public class MemSound implements Sound {
 			this.right = null;
 		}
 		
+		@Override
+		public void fireEvent(EventHandler handler, EventAction action)
+                {
+                    SoundEvent event = new SoundEvent(MemSound.this, action);
+                    handler.fireSoundEvent(event);
+                }
 	}
 
 }

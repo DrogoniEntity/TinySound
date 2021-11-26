@@ -150,8 +150,10 @@ public class TinySound {
 	 * Initializes the mixer and updater, and marks TinySound as initialized.
 	 */
 	private static void finishInit() {
+	        //initialize listener manager
+	        TinySound.listenersManager = new EventHandler();
 		//now initialize the mixer
-		TinySound.mixer = new Mixer();
+		TinySound.mixer = new Mixer(TinySound.listenersManager);
 		//initialize and start the updater
 		TinySound.autoUpdater = new UpdateRunner(TinySound.mixer,
 				TinySound.outLine);
@@ -160,8 +162,6 @@ public class TinySound {
 			updateThread.setDaemon(true);
 			updateThread.setPriority(Thread.MAX_PRIORITY);
 		} catch (Exception e) {}
-		//setup event manager
-		TinySound.listenersManager = new EventHandler();
 		TinySound.inited = true;
 		updateThread.start();
 		//yield to potentially give the updater a chance

@@ -32,6 +32,8 @@ import java.net.URL;
 
 import kuusisto.tinysound.Music;
 import kuusisto.tinysound.TinySound;
+import kuusisto.tinysound.event.EventAction;
+import kuusisto.tinysound.event.MusicEvent;
 
 /**
  * The StreamMusic class is an implementation of the Music interface that
@@ -295,7 +297,7 @@ public class StreamMusic implements Music {
 	 * The StreamMusicReference is an implementation of the MusicReference
 	 * interface.
 	 */
-	private static class StreamMusicReference implements MusicReference {
+	private class StreamMusicReference implements MusicReference {
 		
 		private URL url;
 		private InputStream data;
@@ -400,6 +402,8 @@ public class StreamMusic implements Music {
 		 */
 		@Override
 		public synchronized void setPlaying(boolean playing) {
+		        if (this.playing != playing)
+		            this.fireEvent(playing ? EventAction.PLAY : EventAction.STOP);
 			this.playing = playing;
 		}
 
@@ -437,7 +441,7 @@ public class StreamMusic implements Music {
 						this.skipBytes(position);
 					} catch (IOException e) {
 						System.err.println("Failed to open stream for StreamMusic");
-						this.playing = false;
+						this.setPlaying(false);
 					}
 				}
 			}
@@ -506,7 +510,7 @@ public class StreamMusic implements Music {
 				if (!this.loop) {
 					this.position += num;
 					//now stop since we're out
-					this.playing = false;
+					this.setPlaying(false);
 					return;
 				}
 				else {
@@ -541,12 +545,12 @@ public class StreamMusic implements Music {
 			} catch (IOException e) {
 				//hmm... I guess invalidate this reference
 				this.position = this.numBytesPerChannel;
-				this.playing = false;
+				this.setPlaying(false);
 			}
 			//increment the position appropriately
 			if (tmpRead == -1) { //reached end of file in the middle of reading
 				this.position = this.numBytesPerChannel;
-				this.playing = false;
+				this.setPlaying(false);
 			}
 			else {
 				this.position += num;
@@ -608,7 +612,7 @@ public class StreamMusic implements Music {
 					this.setPosition(this.loopPosition);
 				}
 				else {
-					this.playing = false;
+					this.setPlaying(false);
 				}
 			}
 		}
@@ -619,7 +623,7 @@ public class StreamMusic implements Music {
 		 */
 		@Override
 		public synchronized void dispose() {
-			this.playing = false;
+			this.setPlaying(false);
 			this.position = this.numBytesPerChannel;
 			this.url = null;
 			try {
@@ -627,6 +631,12 @@ public class StreamMusic implements Music {
 			} catch (IOException e) {
 				//whatever... this should never happen
 			}
+		}
+		
+		private void fireEvent(EventAction action)
+		{
+		    MusicEvent event = new MusicEvent(StreamMusic.this, action);
+		    StreamMusic.this.mixer.getEventHandler().fireMusicEvent(event);
 		}
 	}
 }

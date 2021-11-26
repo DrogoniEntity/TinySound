@@ -31,6 +31,8 @@ import java.io.InputStream;
 import java.net.URL;
 
 import kuusisto.tinysound.Sound;
+import kuusisto.tinysound.event.EventAction;
+import kuusisto.tinysound.event.SoundEvent;
 
 /**
  * Thes StreamSound class is an implementation of the Sound interface that
@@ -133,7 +135,7 @@ public class StreamSound implements Sound {
 	 * 
 	 * @Finn Kuusisto
 	 */
-	private static class StreamSoundReference implements SoundReference {
+	private class StreamSoundReference implements SoundReference {
 		
 		public final int SOUND_ID;
 		
@@ -308,6 +310,13 @@ public class StreamSound implements Sound {
 			this.buf = null;
 			this.skipBuf = null;
 		}
+		
+		@Override
+		public void fireEvent(EventHandler handler, EventAction action)
+                {
+                    SoundEvent event = new SoundEvent(StreamSound.this, action);
+                    handler.fireSoundEvent(event);
+                }
 
 	}
 
