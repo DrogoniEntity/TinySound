@@ -80,5 +80,11 @@ public interface SoundReference {
 	 */
 	public void dispose();
 	
+	/**
+	 * Fire a new {@link kuusisto.tinysound.event.SoundEvent SoundEvent} with {@code action}
+	 * as action to {@code handler}.
+	 * @param handler event handler which manage listeners
+	 * @param action event's action
+	 */
 	public void fireEvent(EventHandler handler, EventAction action);
 }

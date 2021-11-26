@@ -26,8 +26,20 @@
  */
 package kuusisto.tinysound.event;
 
-
+/**
+ * A possible action which can occurred with events.
+ * 
+ * @author DrogoniEntity
+ */
 public enum EventAction
 {
-    PLAY, STOP;
+    /**
+     * When a resource begin to play (or resume). 
+     */
+    PLAY,
+    
+    /**
+     * When a resource will stop (or paused).
+     */
+    STOP;
 }

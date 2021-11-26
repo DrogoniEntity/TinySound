@@ -536,6 +536,11 @@ public class MemMusic implements Music {
 			this.right = null;
 		}
 		
+		/**
+		 * Create a new music event with {@code action} as action and
+		 * fire to mixer's EventHandler.
+		 * @param action event action
+		 */
 		private void fireEvent(EventAction action)
 		{
 		    MusicEvent event = new MusicEvent(MemMusic.this, action);

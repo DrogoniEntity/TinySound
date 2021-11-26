@@ -26,9 +26,43 @@
  */
 package kuusisto.tinysound.event;
 
-
+/**
+ * An event listener to use to listen all musics and sound interaction.
+ * 
+ * <p>
+ * This event listener allow to handle when a music begin to start, or will be
+ * stopped (or paused). It can also handle when sound will be played and when
+ * they done.
+ * </p>
+ * 
+ * @author DrogoniEntity
+ */
 public interface TinySoundEventListener
 {
+    
+    /**
+     * Invoked when a interaction has been done on a music.
+     * 
+     * <p>
+     * Information about which music has been handled and what is its new statement
+     * are given by {@code event}.
+     * </p>
+     * 
+     * @param event
+     *            fired event
+     */
     void onMusicEvent(MusicEvent event);
+    
+    /**
+     * Invoked when a interaction has been done on a sound.
+     * 
+     * <p>
+     * Information about which sound has been handled and what is its new statement
+     * are given by {@code event}.
+     * </p>
+     * 
+     * @param event
+     *            fired event
+     */
     void onSoundEvent(SoundEvent event);
 }
