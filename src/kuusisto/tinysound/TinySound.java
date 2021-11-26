@@ -44,7 +44,9 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
+import kuusisto.tinysound.event.TinySoundEventListener;
 import kuusisto.tinysound.internal.ByteList;
+import kuusisto.tinysound.internal.EventHandler;
 import kuusisto.tinysound.internal.MemMusic;
 import kuusisto.tinysound.internal.MemSound;
 import kuusisto.tinysound.internal.Mixer;
@@ -88,6 +90,8 @@ public class TinySound {
 	private static UpdateRunner autoUpdater;
 	//counter for unique sound IDs
 	private static int soundCount = 0;
+	//TinySoundListener manager
+	private static EventHandler listenersManager;
 	
 	/**
 	 * Initialize Tinysound.  This must be called before loading audio.
@@ -156,6 +160,8 @@ public class TinySound {
 			updateThread.setDaemon(true);
 			updateThread.setPriority(Thread.MAX_PRIORITY);
 		} catch (Exception e) {}
+		//setup event manager
+		TinySound.listenersManager = new EventHandler();
 		TinySound.inited = true;
 		updateThread.start();
 		//yield to potentially give the updater a chance
@@ -178,6 +184,7 @@ public class TinySound {
 		TinySound.mixer.clearMusic();
 		TinySound.mixer.clearSounds();
 		TinySound.mixer = null;
+		TinySound.listenersManager = null;
 	}
 	
 	/**
@@ -895,6 +902,16 @@ public class TinySound {
 		}
 		//no good
 		return null;
+	}
+	
+	public static void registerEventListener(TinySoundEventListener listener) throws NullPointerException
+	{
+	    TinySound.listenersManager.registerListener(listener);
+	}
+	
+	public static void unregisterEventListener(TinySoundEventListener listener) throws NullPointerException
+	{
+	    TinySound.listenersManager.unregisterListener(listener);
 	}
 	
 }
