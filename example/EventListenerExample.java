@@ -6,7 +6,7 @@ import kuusisto.tinysound.Sound;
 import kuusisto.tinysound.TinySound;
 import kuusisto.tinysound.event.MusicEvent;
 import kuusisto.tinysound.event.SoundEvent;
-import kuusisto.tinysound.event.TinySoundEventListener;
+import kuusisto.tinysound.event.SoundEventListener;
 
 public class EventListenerExample
 {
@@ -37,7 +37,7 @@ public class EventListenerExample
         TinySound.shutdown();
     }
     
-    public static class MyEventListener implements TinySoundEventListener
+    public static class MyEventListener implements SoundEventListener
     {
         
         @Override

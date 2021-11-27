@@ -37,7 +37,7 @@ package kuusisto.tinysound.event;
  * 
  * @author DrogoniEntity
  */
-public interface TinySoundEventListener
+public interface SoundEventListener
 {
     
     /**

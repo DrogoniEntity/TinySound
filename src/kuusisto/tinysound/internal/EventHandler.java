@@ -31,26 +31,26 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import kuusisto.tinysound.event.MusicEvent;
 import kuusisto.tinysound.event.SoundEvent;
-import kuusisto.tinysound.event.TinySoundEventListener;
+import kuusisto.tinysound.event.SoundEventListener;
 
 public class EventHandler
 {
     
-    private final Set<TinySoundEventListener> listeners;
+    private final Set<SoundEventListener> listeners;
     
     public EventHandler()
     {
         this.listeners = ConcurrentHashMap.newKeySet();
     }
     
-    public void registerListener(TinySoundEventListener listener) throws NullPointerException
+    public void registerListener(SoundEventListener listener) throws NullPointerException
     {
         if (listener == null)
             throw new NullPointerException("listener is null");
         this.listeners.add(listener);
     }
     
-    public void unregisterListener(TinySoundEventListener listener) throws NullPointerException
+    public void unregisterListener(SoundEventListener listener) throws NullPointerException
     {
         if (listener == null)
             throw new NullPointerException("listener is null");
@@ -69,7 +69,7 @@ public class EventHandler
         
         if (!this.listeners.isEmpty())
         {
-            for (TinySoundEventListener listener : this.listeners)
+            for (SoundEventListener listener : this.listeners)
                 listener.onMusicEvent(event);
         }
     }
@@ -81,7 +81,7 @@ public class EventHandler
         
         if (!this.listeners.isEmpty())
         {
-            for (TinySoundEventListener listener : this.listeners)
+            for (SoundEventListener listener : this.listeners)
                 listener.onSoundEvent(event);
         }
     }
