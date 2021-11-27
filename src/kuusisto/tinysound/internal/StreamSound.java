@@ -31,7 +31,6 @@ import java.io.InputStream;
 import java.net.URL;
 
 import kuusisto.tinysound.Sound;
-import kuusisto.tinysound.event.EventAction;
 import kuusisto.tinysound.event.SoundEvent;
 
 /**
@@ -312,7 +311,7 @@ public class StreamSound implements Sound {
 		}
 		
 		@Override
-		public void fireEvent(EventHandler handler, EventAction action)
+		public void fireEvent(EventHandler handler, SoundEvent.Action action)
                 {
                     SoundEvent event = new SoundEvent(StreamSound.this, action);
                     handler.fireSoundEvent(event);

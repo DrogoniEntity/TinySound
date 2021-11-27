@@ -29,7 +29,7 @@ package kuusisto.tinysound.internal;
 import java.util.ArrayList;
 import java.util.List;
 
-import kuusisto.tinysound.event.EventAction;
+import kuusisto.tinysound.event.SoundEvent;
 
 /**
  * The Mixer class is what does the audio data mixing for the TinySound system.
@@ -89,7 +89,7 @@ public class Mixer {
 	 * @param sound SoundReference to be registered
 	 */
 	public synchronized void registerSoundReference(SoundReference sound) {
-	        sound.fireEvent(this.eventHandler, EventAction.PLAY);
+	        sound.fireEvent(this.eventHandler, SoundEvent.Action.PLAY);
 		this.sounds.add(sound);
 	}
 	
@@ -209,12 +209,12 @@ public class Mixer {
 					bytesRead = true;
 					//remove the reference if done
 					if (sound.bytesAvailable() <= 0) {
-					        sound.fireEvent(this.eventHandler, EventAction.STOP);
+					        sound.fireEvent(this.eventHandler, SoundEvent.Action.STOP);
 						this.sounds.remove(s).dispose();
 					}
 				}
 				else { //otherwise remove this reference
-				        sound.fireEvent(this.eventHandler, EventAction.STOP);
+				        sound.fireEvent(this.eventHandler, SoundEvent.Action.STOP);
 					this.sounds.remove(s).dispose();
 				}
 			}
@@ -270,7 +270,7 @@ public class Mixer {
 				sound.skipBytes(numBytes);
 				//remove the reference if done
 				if (sound.bytesAvailable() <= 0) {
-				        sound.fireEvent(this.eventHandler, EventAction.STOP);
+				        sound.fireEvent(this.eventHandler, SoundEvent.Action.STOP);
 					this.sounds.remove(s).dispose();
 				}
 			}

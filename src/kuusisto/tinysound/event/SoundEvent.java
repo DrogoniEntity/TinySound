@@ -31,9 +31,9 @@ import kuusisto.tinysound.Sound;
 public final class SoundEvent
 {
     private final Sound sound;
-    private final EventAction action;
+    private final SoundEvent.Action action;
     
-    public SoundEvent(Sound sound, EventAction action)
+    public SoundEvent(Sound sound, SoundEvent.Action action)
     {
         this.sound = sound;
         this.action = action;
@@ -44,8 +44,12 @@ public final class SoundEvent
         return this.sound;
     }
     
-    public EventAction getAction()
+    public SoundEvent.Action getAction()
     {
         return this.action;
+    }
+    
+    public static enum Action {
+	PLAY, STOP;
     }
 }

@@ -4,7 +4,6 @@ import java.util.Random;
 import kuusisto.tinysound.Music;
 import kuusisto.tinysound.Sound;
 import kuusisto.tinysound.TinySound;
-import kuusisto.tinysound.event.EventAction;
 import kuusisto.tinysound.event.MusicEvent;
 import kuusisto.tinysound.event.SoundEvent;
 import kuusisto.tinysound.event.TinySoundEventListener;
@@ -44,7 +43,7 @@ public class EventListenerExample
         @Override
         public void onMusicEvent(MusicEvent event)
         {
-            if (event.getAction() == EventAction.PLAY)
+            if (event.getAction() == MusicEvent.Action.PLAY)
                 System.out.println("My music begin to play !");
             else
             {
@@ -56,7 +55,7 @@ public class EventListenerExample
         @Override
         public void onSoundEvent(SoundEvent event)
         {
-            if (event.getAction() == EventAction.PLAY)
+            if (event.getAction() == SoundEvent.Action.PLAY)
                 System.out.println("Playing sound " + event.getSound());
             else
                 System.out.println("Sound " + event.getSound() + " ended !");
