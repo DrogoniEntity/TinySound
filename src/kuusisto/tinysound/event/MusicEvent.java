@@ -50,6 +50,6 @@ public final class MusicEvent
     }
     
     public static enum Action {
-	PLAY, STOP, LOOPED;
+	PLAY, STOP, LOOP;
     }
 }

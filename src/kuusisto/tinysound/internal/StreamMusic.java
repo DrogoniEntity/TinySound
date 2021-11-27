@@ -513,6 +513,7 @@ public class StreamMusic implements Music {
 					return;
 				}
 				else {
+				    	this.fireEvent(MusicEvent.Action.LOOP);
 					//compute the next position
 					long loopLength = this.numBytesPerChannel -
 						this.loopPosition;
@@ -608,6 +609,7 @@ public class StreamMusic implements Music {
 			//wrap if looping, stop otherwise
 			if (this.position >= this.numBytesPerChannel) {
 				if (this.loop) {
+				    	this.fireEvent(MusicEvent.Action.LOOP);
 					this.setPosition(this.loopPosition);
 				}
 				else {

@@ -477,6 +477,7 @@ public class MemMusic implements Music {
 				//wrap if looping, stop otherwise
 				if (this.position >= this.left.length) {
 					if (this.loop) {
+					    	this.fireEvent(MusicEvent.Action.LOOP);
 						this.position = this.loopPosition;
 					}
 					else {
@@ -515,6 +516,7 @@ public class MemMusic implements Music {
 			//wrap if looping, stop otherwise
 			if (this.position >= this.left.length) {
 				if (this.loop) {
+				    this.fireEvent(MusicEvent.Action.LOOP);
 					this.position = this.loopPosition;
 				}
 				else {
