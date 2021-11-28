@@ -107,28 +107,42 @@ public interface Music {
 	public void setLoop(boolean loop);
 	
 	/**
-	 * Get the loop position of this Music by sample frame.
-	 * @return loop position by sample frame
+	 * Get the starting loop position of this Music by sample frame.
+	 * @return starting loop position by sample frame
 	 */
-	public int getLoopPositionByFrame();
+	public int getStartingLoopPositionByFrame();
 	
 	/**
-	 * Get the loop position of this Music by seconds.
-	 * @return loop position by seconds
+	 * Get the ending loop position of this Music by sample frame.
+	 * @return ending loop position by sample frame
 	 */
-	public double getLoopPositionBySeconds();
+	public int getEndingLoopPositionByFrame();
 	
 	/**
-	 * Set the loop position of this Music by sample frame.
-	 * @param frameIndex sample frame loop position to set
+	 * Get the starting loop position of this Music by seconds.
+	 * @return starting loop position by seconds
 	 */
-	public void setLoopPositionByFrame(int frameIndex);
+	public double getStartingLoopPositionBySeconds();
 	
 	/**
-	 * Set the loop position of this Music by seconds.
-	 * @param seconds loop position to set by seconds
+	 * Get the ending loop position of this Music by seconds.
+	 * @return ending loop position by seconds
 	 */
-	public void setLoopPositionBySeconds(double seconds);
+	public double getEndingLoopPositionBySeconds();
+	
+	/**
+	 * Set the loop positions of this Music by sample frame.
+	 * @param startFrame sample frame loop starting position to set
+	 * @param endFrame sample frame loop ending position to set
+	 */
+	public void setLoopPositionsByFrame(int startFrame, int endFrame);
+	
+	/**
+	 * Set the loop positions of this Music by seconds.
+	 * @param startSeconds starting loop position to set by seconds
+	 * @param endSeconds ending loop position to set by seconds
+	 */
+	public void setLoopPositionsBySeconds(double startSeconds, double endSeconds);
 	
 	/**
 	 * Get the volume of this Music.
