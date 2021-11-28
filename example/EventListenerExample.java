@@ -14,12 +14,12 @@ public class EventListenerExample
     
     public static void main(String args[]) throws Throwable
     {
-        TinySound.init();
-        TinySound.registerEventListener(new MyEventListener());
+        TinySound lib = TinySound.init();
+        lib.registerEventListener(new MyEventListener());
         running = true;
         
-        Music music = TinySound.loadMusic(new File("groundtheme.wav"));
-        Sound sound = TinySound.loadSound(new File("jump.wav"));
+        Music music = lib.loadMusic(new File("groundtheme.wav"));
+        Sound sound = lib.loadSound(new File("jump.wav"));
         
         Random random = new Random();
         music.play(false);
@@ -34,7 +34,7 @@ public class EventListenerExample
         
         System.out.println("Shutting down...");
         sound.stop();
-        TinySound.shutdown();
+        lib.shutdown();
     }
     
     public static class MyEventListener implements SoundEventListener

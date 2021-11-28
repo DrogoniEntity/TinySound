@@ -81,40 +81,47 @@ public class TinySound {
 			);
 	
 	//the system has only one mixer for both music and sounds
-	private static Mixer mixer;
+	private Mixer mixer;
 	//need a line to the speakers
-	private static SourceDataLine outLine;
+	private SourceDataLine outLine;
 	//see if the system has been initialized
 	private static boolean inited = false;
 	//auto-updater for the system
-	private static UpdateRunner autoUpdater;
+	private UpdateRunner autoUpdater;
 	//counter for unique sound IDs
-	private static int soundCount = 0;
+	private int soundCount = 0;
 	//TinySoundListener manager
-	private static EventHandler listenersManager;
+	private EventHandler listenersManager;
+	
+	//prevent to use any constructors
+	private TinySound(SourceDataLine outLine) {
+	    this.outLine = outLine;
+	}
 	
 	/**
 	 * Initialize Tinysound.  This must be called before loading audio.
 	 */
-	public static void init() {
+	public static TinySound init() throws IllegalStateException, UnsupportedOperationException, NullPointerException {
 		if (TinySound.inited) {
-			return;
+			throw new IllegalStateException("TinySound already initialized");
 		}
 		//try to open a line to the speakers
 		DataLine.Info info = new DataLine.Info(SourceDataLine.class,
 				TinySound.FORMAT);
 		if (!AudioSystem.isLineSupported(info)) {
-		    System.err.println("Unsupported output format!");
-		    return;
+		    throw new UnsupportedOperationException("Unsupported output format");
 		}
-		TinySound.outLine = TinySound.tryGetLine();
-		if (TinySound.outLine == null) {
-		    System.err.println("Output line unavailable!");
-		    return;
+		SourceDataLine outLine = TinySound.tryGetLine();
+		if (outLine == null) {
+		    throw new NullPointerException("Output line unavailable!");
 		}
+		
 		//start the line and finish initialization
-		TinySound.outLine.start();
-		TinySound.finishInit();
+		TinySound instance = new TinySound(outLine);
+		outLine.start();
+		instance.finishInit();
+		
+		return instance;
 	}
 	
 	/**
@@ -129,35 +136,38 @@ public class TinySound {
 	 * @throws IllegalArgumentException if the specified Mixer is not installed
 	 * on the system
 	 */
-	public static void init(javax.sound.sampled.Mixer.Info info) 
-			throws LineUnavailableException, SecurityException,
+	public static TinySound init(javax.sound.sampled.Mixer.Info info) 
+			throws IllegalStateException, LineUnavailableException, SecurityException,
 			IllegalArgumentException {
 		if (TinySound.inited) {
-			return;
+			throw new IllegalStateException("TinySound already initialized");
 		}
 		//try to open a line to the speakers
 		javax.sound.sampled.Mixer mixer = AudioSystem.getMixer(info);
 		DataLine.Info lineInfo = new DataLine.Info(SourceDataLine.class,
 				TinySound.FORMAT);
-		TinySound.outLine = (SourceDataLine)mixer.getLine(lineInfo);
-		TinySound.outLine.open(TinySound.FORMAT);
+		SourceDataLine outLine = (SourceDataLine)mixer.getLine(lineInfo);
+		outLine.open(TinySound.FORMAT);
+		
 		//start the line and finish initialization
-		TinySound.outLine.start();
-		TinySound.finishInit();
+		TinySound instance = new TinySound(outLine);
+		outLine.start();
+		instance.finishInit();
+		
+		return instance;
 	}
 	
 	/**
 	 * Initializes the mixer and updater, and marks TinySound as initialized.
 	 */
-	private static void finishInit() {
+	private void finishInit() {
 	        //initialize listener manager
-	        TinySound.listenersManager = new EventHandler();
+	        this.listenersManager = new EventHandler();
 		//now initialize the mixer
-		TinySound.mixer = new Mixer(TinySound.listenersManager);
+		this.mixer = new Mixer(this.listenersManager);
 		//initialize and start the updater
-		TinySound.autoUpdater = new UpdateRunner(TinySound.mixer,
-				TinySound.outLine);
-		Thread updateThread = new Thread(TinySound.autoUpdater);
+		this.autoUpdater = new UpdateRunner(this.mixer, this.outLine);
+		Thread updateThread = new Thread(this.autoUpdater);
 		try {
 			updateThread.setDaemon(true);
 			updateThread.setPriority(Thread.MAX_PRIORITY);
@@ -171,20 +181,24 @@ public class TinySound {
 	/**
 	 * Shutdown TinySound.
 	 */
-	public static void shutdown() {
+	public void shutdown() throws IllegalStateException {
 		if (!TinySound.inited) {
-			return;
+			throw new IllegalStateException("TinySound not initialized");
 		}
-		TinySound.inited = false;
 		//stop the auto-updater if running
-		TinySound.autoUpdater.stop();
-		TinySound.autoUpdater = null;
-		TinySound.outLine.stop();
-		TinySound.outLine.flush();
-		TinySound.mixer.clearMusic();
-		TinySound.mixer.clearSounds();
-		TinySound.mixer = null;
-		TinySound.listenersManager = null;
+		this.autoUpdater.stop();
+		
+		//clear resources
+		this.autoUpdater = null;
+		this.outLine.stop();
+		this.outLine.flush();
+		this.mixer.clearMusic();
+		this.mixer.clearSounds();
+		this.mixer = null;
+		this.listenersManager = null;
+		
+		//and clear inited flag
+		TinySound.inited = false;
 	}
 	
 	/**
@@ -201,11 +215,8 @@ public class TinySound {
 	 * @return the global volume for all audio, -1.0 if TinySound has not been
 	 * initialized or has subsequently been shutdown
 	 */
-	public static double getGlobalVolume() {
-		if (!TinySound.inited) {
-			return -1.0;
-		}
-		return TinySound.mixer.getVolume();
+	public double getGlobalVolume() {
+		return this.mixer.getVolume();
 	}
 	
 	/**
@@ -213,11 +224,8 @@ public class TinySound {
 	 * for all Music and Sound volume settings.  It starts at 1.0.
 	 * @param volume the global volume to set
 	 */
-	public static void setGlobalVolume(double volume) {
-		if (!TinySound.inited) {
-			return;
-		}
-		TinySound.mixer.setVolume(volume);
+	public void setGlobalVolume(double volume) {
+		this.mixer.setVolume(volume);
 	}
 	
 	/**
@@ -226,8 +234,8 @@ public class TinySound {
 	 * @param name name of the Music resource
 	 * @return Music resource as specified, null if not found/loaded
 	 */
-	public static Music loadMusic(String name) {
-		return TinySound.loadMusic(name, false);
+	public Music loadMusic(String name) {
+		return this.loadMusic(name, false);
 	}
 	
 	/**
@@ -238,12 +246,7 @@ public class TinySound {
 	 * temporary file to reduce memory overhead
 	 * @return Music resource as specified, null if not found/loaded
 	 */
-	public static Music loadMusic(String name, boolean streamFromFile) {
-		//check if the system is initialized
-		if (!TinySound.inited) {
-			System.err.println("TinySound not initialized!");
-			return null;
-		}
+	public Music loadMusic(String name, boolean streamFromFile) throws NullPointerException {
 		//check for failure
 		if (name == null) {
 			return null;
@@ -255,10 +258,9 @@ public class TinySound {
 		URL url = TinySound.class.getResource(name);
 		//check for failure to find resource
 		if (url == null) {
-			System.err.println("Unable to find resource " + name + "!");
-			return null;
+			throw new NullPointerException("Unable to find resource " + name + "!");
 		}
-		return TinySound.loadMusic(url, streamFromFile);
+		return this.loadMusic(url, streamFromFile);
 	}
 	
 	/**
@@ -266,8 +268,8 @@ public class TinySound {
 	 * @param file the Music file to load
 	 * @return Music from file as specified, null if not found/loaded
 	 */
-	public static Music loadMusic(File file) {
-		return TinySound.loadMusic(file, false);
+	public Music loadMusic(File file) {
+		return this.loadMusic(file, false);
 	}
 	
 	/**
@@ -277,12 +279,7 @@ public class TinySound {
 	 * temporary file to reduce memory overhead
 	 * @return Music from file as specified, null if not found/loaded
 	 */
-	public static Music loadMusic(File file, boolean streamFromFile) {
-		//check if the system is initialized
-		if (!TinySound.inited) {
-			System.err.println("TinySound not initialized!");
-			return null;
-		}
+	public Music loadMusic(File file, boolean streamFromFile) {
 		//check for failure
 		if (file == null) {
 			return null;
@@ -291,10 +288,9 @@ public class TinySound {
 		try {
 			url = file.toURI().toURL();
 		} catch (MalformedURLException e) {
-			System.err.println("Unable to find file " + file + "!");
-			return null;
+			throw new NullPointerException("Unable to find file " + file + "!");
 		}
-		return TinySound.loadMusic(url, streamFromFile);
+		return this.loadMusic(url, streamFromFile);
 	}
 	
 	/**
@@ -302,8 +298,8 @@ public class TinySound {
 	 * @param url the URL of the Music
 	 * @return Music from URL as specified, null if not found/loaded
 	 */
-	public static Music loadMusic(URL url) {
-		return TinySound.loadMusic(url, false);
+	public Music loadMusic(URL url) {
+		return this.loadMusic(url, false);
 	}
 	
 	/**
@@ -313,12 +309,7 @@ public class TinySound {
 	 * temporary file to reduce memory overhead
 	 * @return Music from URL as specified, null if not found/loaded
 	 */
-	public static Music loadMusic(URL url, boolean streamFromFile) {
-		//check if the system is initialized
-		if (!TinySound.inited) {
-			System.err.println("TinySound not initialized!");
-			return null;
-		}
+	public Music loadMusic(URL url, boolean streamFromFile) {
 		//check for failure
 		if (url == null) {
 			return null;
@@ -346,14 +337,14 @@ public class TinySound {
 			StreamMusic sm = null;
 			try {
 				sm = new StreamMusic(info.URL, info.NUM_BYTES_PER_CHANNEL,
-						TinySound.mixer);
+						this.mixer);
 			} catch (IOException e) {
 				System.err.println("Failed to create StreamMusic!");
 			}
 			return sm;
 		}
 		//construct the Music object and register it with the mixer
-		return new MemMusic(data[0], data[1], TinySound.mixer);
+		return new MemMusic(data[0], data[1], this.mixer);
 	}
 	
 	/**
@@ -362,8 +353,8 @@ public class TinySound {
 	 * @param name name of the Sound resource
 	 * @return Sound resource as specified, null if not found/loaded
 	 */
-	public static Sound loadSound(String name) {
-		return TinySound.loadSound(name, false);
+	public Sound loadSound(String name) {
+		return this.loadSound(name, false);
 	}
 	
 	/**
@@ -374,7 +365,7 @@ public class TinySound {
 	 * temporary file to reduce memory overhead
 	 * @return Sound resource as specified, null if not found/loaded
 	 */
-	public static Sound loadSound(String name, boolean streamFromFile) {
+	public Sound loadSound(String name, boolean streamFromFile) {
 		//check if the system is initialized
 		if (!TinySound.inited) {
 			System.err.println("TinySound not initialized!");
@@ -394,7 +385,7 @@ public class TinySound {
 			System.err.println("Unable to find resource " + name + "!");
 			return null;
 		}
-		return TinySound.loadSound(url, streamFromFile);
+		return this.loadSound(url, streamFromFile);
 
 	}
 	
@@ -403,8 +394,8 @@ public class TinySound {
 	 * @param file the Sound file to load
 	 * @return Sound from file as specified, null if not found/loaded
 	 */
-	public static Sound loadSound(File file) {
-		return TinySound.loadSound(file, false);
+	public Sound loadSound(File file) {
+		return this.loadSound(file, false);
 	}
 	
 	/**
@@ -414,12 +405,7 @@ public class TinySound {
 	 * temporary file to reduce memory overhead
 	 * @return Sound from file as specified, null if not found/loaded
 	 */
-	public static Sound loadSound(File file, boolean streamFromFile) {
-		//check if the system is initialized
-		if (!TinySound.inited) {
-			System.err.println("TinySound not initialized!");
-			return null;
-		}
+	public Sound loadSound(File file, boolean streamFromFile) {
 		//check for failure
 		if (file == null) {
 			return null;
@@ -428,10 +414,9 @@ public class TinySound {
 		try {
 			url = file.toURI().toURL();
 		} catch (MalformedURLException e) {
-			System.err.println("Unable to find file " + file + "!");
-			return null;
+			throw new NullPointerException("Unable to find file " + file + "!");
 		}
-		return TinySound.loadSound(url, streamFromFile);
+		return this.loadSound(url, streamFromFile);
 	}
 	
 	/**
@@ -439,8 +424,8 @@ public class TinySound {
 	 * @param url the URL of the Sound
 	 * @return Sound from URL as specified, null if not found/loaded
 	 */
-	public static Sound loadSound(URL url) {
-		return TinySound.loadSound(url, false);
+	public Sound loadSound(URL url) {
+		return this.loadSound(url, false);
 	}
 	
 	/**
@@ -450,12 +435,7 @@ public class TinySound {
 	 * temporary file to reduce memory overhead
 	 * @return Sound from URL as specified, null if not found/loaded
 	 */
-	public static Sound loadSound(URL url, boolean streamFromFile) {
-		//check if the system is initialized
-		if (!TinySound.inited) {
-			System.err.println("TinySound not initialized!");
-			return null;
-		}
+	public Sound loadSound(URL url, boolean streamFromFile) {
 		//check for failure
 		if (url == null) {
 			return null;
@@ -483,17 +463,16 @@ public class TinySound {
 			StreamSound ss = null;
 			try {
 				ss = new StreamSound(info.URL, info.NUM_BYTES_PER_CHANNEL,
-						TinySound.mixer, TinySound.soundCount);
-				TinySound.soundCount++;
+						this.mixer, this.soundCount);
+				this.soundCount++;
 			} catch (IOException e) {
 				System.err.println("Failed to create StreamSound!");
 			}
 			return ss;
 		}
 		//construct the Sound object
-		TinySound.soundCount++;
-		return new MemSound(data[0], data[1], TinySound.mixer,
-				TinySound.soundCount);
+		this.soundCount++;
+		return new MemSound(data[0], data[1], this.mixer, this.soundCount);
 	}
 	
 	/**
@@ -904,14 +883,12 @@ public class TinySound {
 		return null;
 	}
 	
-	public static void registerEventListener(SoundEventListener listener) throws NullPointerException
-	{
-	    TinySound.listenersManager.registerListener(listener);
+	public void registerEventListener(SoundEventListener listener) throws NullPointerException {
+	    this.listenersManager.registerListener(listener);
 	}
 	
-	public static void unregisterEventListener(SoundEventListener listener) throws NullPointerException
-	{
-	    TinySound.listenersManager.unregisterListener(listener);
+	public void unregisterEventListener(SoundEventListener listener) throws NullPointerException {
+	    this.listenersManager.unregisterListener(listener);
 	}
 	
 }

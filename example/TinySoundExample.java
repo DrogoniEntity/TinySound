@@ -6,11 +6,11 @@ public class TinySoundExample {
 
 	public static void main(String[] args) {
 		//initialize TinySound
-		TinySound.init();
+		TinySound lib = TinySound.init();
 		//load a sound and music
 		//note: you can also load with Files, URLs and InputStreams
-		Music song = TinySound.loadMusic("song.wav");
-		Sound coin = TinySound.loadSound("coin.wav");
+		Music song = lib.loadMusic("song.wav");
+		Sound coin = lib.loadSound("coin.wav");
 		//start playing the music on loop
 		song.play(true);
 		//play the sound a few times in a loop
@@ -21,7 +21,7 @@ public class TinySoundExample {
 			} catch (InterruptedException e) {}
 		}
 		//be sure to shutdown TinySound when done
-		TinySound.shutdown();
+		lib.shutdown();
 	}
 	
 }
