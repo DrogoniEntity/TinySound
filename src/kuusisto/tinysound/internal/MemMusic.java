@@ -55,7 +55,7 @@ public class MemMusic implements Music {
 		this.right = right;
 		this.mixer = mixer;
 		this.reference = new MemMusicReference(this.left, this.right, false,
-				false, 0, 0, 1.0, 0.0);
+				false, 0, 0, 0, 1.0, 0.0);
 		this.mixer.registerMusicReference(this.reference);
 	}
 	
@@ -135,7 +135,7 @@ public class MemMusic implements Music {
 	 */
 	@Override
 	public void rewindToLoopPosition() {
-		long byteIndex = this.reference.getLoopPosition();
+		long byteIndex = this.reference.getStartingLoopPosition();
 		this.reference.setPosition(byteIndex);
 	}
 	
@@ -180,10 +180,10 @@ public class MemMusic implements Music {
 	 * @return loop position by sample frame
 	 */
 	@Override
-	public int getLoopPositionByFrame() {
+	public int getStartingLoopPositionByFrame() {
 		int bytesPerChannelForFrame = TinySound.FORMAT.getFrameSize() /
 			TinySound.FORMAT.getChannels();
-		long byteIndex = this.reference.getLoopPosition();
+		long byteIndex = this.reference.getStartingLoopPosition();
 		return (int)(byteIndex / bytesPerChannelForFrame);
 	}
 	
@@ -192,10 +192,35 @@ public class MemMusic implements Music {
 	 * @return loop position by seconds
 	 */
 	@Override
-	public double getLoopPositionBySeconds() {
+	public double getStartingLoopPositionBySeconds() {
 		int bytesPerChannelForFrame = TinySound.FORMAT.getFrameSize() /
 			TinySound.FORMAT.getChannels();
-		long byteIndex = this.reference.getLoopPosition();
+		long byteIndex = this.reference.getStartingLoopPosition();
+		return (byteIndex / (TinySound.FORMAT.getFrameRate() *
+				bytesPerChannelForFrame));
+	}
+	
+	/**
+	 * Get the loop position of this MemMusic by sample frame.
+	 * @return loop position by sample frame
+	 */
+	@Override
+	public int getEndingLoopPositionByFrame() {
+		int bytesPerChannelForFrame = TinySound.FORMAT.getFrameSize() /
+			TinySound.FORMAT.getChannels();
+		long byteIndex = this.reference.getEndingLoopPosition();
+		return (int)(byteIndex / bytesPerChannelForFrame);
+	}
+	
+	/**
+	 * Get the loop position of this MemMusic by seconds.
+	 * @return loop position by seconds
+	 */
+	@Override
+	public double getEndingLoopPositionBySeconds() {
+		int bytesPerChannelForFrame = TinySound.FORMAT.getFrameSize() /
+			TinySound.FORMAT.getChannels();
+		long byteIndex = this.reference.getEndingLoopPosition();
 		return (byteIndex / (TinySound.FORMAT.getFrameRate() *
 				bytesPerChannelForFrame));
 	}
@@ -205,12 +230,13 @@ public class MemMusic implements Music {
 	 * @param frameIndex sample frame loop position to set
 	 */
 	@Override
-	public void setLoopPositionByFrame(int frameIndex) {
+	public void setLoopPositionsByFrame(int startFrame, int endFrame) {
 		//get the byte index for a channel
 		int bytesPerChannelForFrame = TinySound.FORMAT.getFrameSize() /
 			TinySound.FORMAT.getChannels();
-		long byteIndex = (long)(frameIndex * bytesPerChannelForFrame);
-		this.reference.setLoopPosition(byteIndex);
+		long startIndex = (long) (startFrame * bytesPerChannelForFrame);
+		long endIndex = (long) (endFrame * bytesPerChannelForFrame);
+		this.reference.setLoopPositions(startIndex, endIndex);
 	}
 	
 	/**
@@ -218,13 +244,15 @@ public class MemMusic implements Music {
 	 * @param seconds loop position to set by seconds
 	 */
 	@Override
-	public void setLoopPositionBySeconds(double seconds) {
+	public void setLoopPositionsBySeconds(double startSeconds, double endSeconds) {
 		//get the byte index for a channel
 		int bytesPerChannelForFrame = TinySound.FORMAT.getFrameSize() /
 			TinySound.FORMAT.getChannels();
-		long byteIndex = (long)(seconds * TinySound.FORMAT.getFrameRate()) *
+		long startIndex = (long) (startSeconds * TinySound.FORMAT.getFrameRate()) *
 			bytesPerChannelForFrame;
-		this.reference.setLoopPosition(byteIndex);
+		long endIndex = (long) (endSeconds * TinySound.FORMAT.getFrameRate() *
+			bytesPerChannelForFrame);
+		this.reference.setLoopPositions(startIndex, endIndex);
 	}
 	
 	/**
@@ -299,7 +327,8 @@ public class MemMusic implements Music {
 		private byte[] right;
 		private boolean playing;
 		private boolean loop;
-		private int loopPosition;
+		private int startLoopPosition;
+		private int endLoopPosition;
 		private int position;
 		private double volume;
 		private double pan;
@@ -317,13 +346,14 @@ public class MemMusic implements Music {
 		 * @param pan pan to play the music
 		 */
 		public MemMusicReference(byte[] left, byte[] right, boolean playing,
-				boolean loop, int loopPosition, int position, double volume,
-				double pan) {
+				boolean loop, int startLoopPosition, int endLoopPosition, int position,
+				double volume, double pan) {
 			this.left = left;
 			this.right = right;
 			this.playing = playing;
 			this.loop = loop;
-			this.loopPosition = loopPosition;
+			this.startLoopPosition = startLoopPosition;
+			this.endLoopPosition = endLoopPosition;
 			this.position = position;
 			this.volume = volume;
 			this.pan = pan;
@@ -357,12 +387,21 @@ public class MemMusic implements Music {
 		}
 		
 		/**
-		 * Get the loop-position byte index of this MemMusicReference.
+		 * Get the starting loop-position byte index of this MemMusicReference.
 		 * @return loop-position byte index of this MemMusicReference
 		 */
 		@Override
-		public synchronized long getLoopPosition() {
-			return this.loopPosition;
+		public synchronized long getStartingLoopPosition() {
+			return this.startLoopPosition;
+		}
+		
+		/**
+		 * Get the ending loop-position byte index of this MemMusicReference.
+		 * @return loop-position byte index of this MemMusicReference
+		 */
+		@Override
+		public synchronized long getEndingLoopPosition() {
+			return this.endLoopPosition;
 		}
 		
 		/**
@@ -420,9 +459,13 @@ public class MemMusic implements Music {
 		 * @param loopPosition the loop-position byte index to set
 		 */
 		@Override
-		public synchronized void setLoopPosition(long loopPosition) {
-			if (loopPosition >= 0 && loopPosition < this.left.length) {
-				this.loopPosition = (int)loopPosition;
+		public synchronized void setLoopPositions(long startPosition, long endPosition) {
+			if (startPosition >= 0 && startPosition < this.left.length) {
+				this.startLoopPosition = (int) startPosition;
+				this.endLoopPosition = this.left.length;
+			}
+			if (endPosition > this.startLoopPosition && endPosition < this.left.length) {
+			    this.endLoopPosition = (int) endPosition;
 			}
 		}
 		
@@ -474,15 +517,14 @@ public class MemMusic implements Music {
 		public synchronized void skipBytes(long num) {
 			for (int i = 0; i < num; i++) {
 				this.position++;
-				//wrap if looping, stop otherwise
-				if (this.position >= this.left.length) {
-					if (this.loop) {
-					    	this.fireEvent(MusicEvent.Action.LOOP);
-						this.position = this.loopPosition;
-					}
-					else {
-						this.setPlaying(false);
-					}
+				//wrap if looping
+				if (this.loop && this.position >= this.endLoopPosition) {
+				    this.fireEvent(MusicEvent.Action.LOOP);
+				    this.position = this.startLoopPosition;
+				}
+				//stop otherwise
+				else if (this.position >= this.left.length) {
+				    this.setPlaying(false);
 				}
 			}
 		}
@@ -513,15 +555,14 @@ public class MemMusic implements Music {
 						(this.right[this.position] & 0xFF));
 			}
 			this.position += 2;
-			//wrap if looping, stop otherwise
-			if (this.position >= this.left.length) {
-				if (this.loop) {
-				    this.fireEvent(MusicEvent.Action.LOOP);
-					this.position = this.loopPosition;
-				}
-				else {
-					this.setPlaying(false);
-				}
+			//wrap if looping
+			if (this.loop && this.position >= this.endLoopPosition) {
+			    this.fireEvent(MusicEvent.Action.LOOP);
+			    this.position = this.startLoopPosition;
+			}
+			//stop otherwise
+			else if (this.position >= this.left.length) {
+			    this.setPlaying(false);
 			}
 		}
 

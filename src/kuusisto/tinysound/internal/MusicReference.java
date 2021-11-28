@@ -54,10 +54,16 @@ public interface MusicReference {
 	public long getPosition();
 	
 	/**
-	 * Get the loop-position byte index of this MusicReference.
+	 * Get the starting loop-position byte index of this MusicReference.
 	 * @return loop-position byte index of this MusicReference
 	 */
-	public long getLoopPosition();
+	public long getStartingLoopPosition();
+	
+	/**
+	 * Get the ending loop-position byte index of this MusicReference.
+	 * @return loop-position byte index of this MusicReference
+	 */
+	public long getEndingLoopPosition();
 	
 	/**
 	 * Get the volume of this MusicReference.
@@ -90,10 +96,11 @@ public interface MusicReference {
 	public void setPosition(long position);
 	
 	/**
-	 * Set the loop-position byte index of this MusicReference.
-	 * @param loopPosition the loop-position byte index to set
+	 * Set the loop-positions byte index of this MusicReference.
+	 * @param startPosition the starting loop-position byte index to set
+	 * @param endPosition the ending loop-position byte index to set
 	 */
-	public void setLoopPosition(long loopPosition);
+	public void setLoopPositions(long startPosition, long endPosition);
 	
 	/**
 	 * Set the volume of this MusicReference.

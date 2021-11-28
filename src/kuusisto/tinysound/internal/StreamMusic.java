@@ -59,7 +59,7 @@ public class StreamMusic implements Music {
 			throws IOException {
 		this.dataURL = dataURL;
 		this.mixer = mixer;
-		this.reference = new StreamMusicReference(this.dataURL, false, false, 0,
+		this.reference = new StreamMusicReference(this.dataURL, false, false, 0, 0,
 				0, numBytesPerChannel, 1.0, 0.0);
 		this.mixer.registerMusicReference(this.reference);
 	}
@@ -140,7 +140,7 @@ public class StreamMusic implements Music {
 	 */
 	@Override
 	public void rewindToLoopPosition() {
-		long byteIndex = this.reference.getLoopPosition();
+		long byteIndex = this.reference.getStartingLoopPosition();
 		this.reference.setPosition(byteIndex);
 	}
 	
@@ -185,10 +185,10 @@ public class StreamMusic implements Music {
 	 * @return loop position by sample frame
 	 */
 	@Override
-	public int getLoopPositionByFrame() {
+	public int getStartingLoopPositionByFrame() {
 		int bytesPerChannelForFrame = TinySound.FORMAT.getFrameSize() /
 			TinySound.FORMAT.getChannels();
-		long byteIndex = this.reference.getLoopPosition();
+		long byteIndex = this.reference.getStartingLoopPosition();
 		return (int)(byteIndex / bytesPerChannelForFrame);
 	}
 
@@ -197,10 +197,35 @@ public class StreamMusic implements Music {
 	 * @return loop position by seconds
 	 */
 	@Override
-	public double getLoopPositionBySeconds() {
+	public double getStartingLoopPositionBySeconds() {
 		int bytesPerChannelForFrame = TinySound.FORMAT.getFrameSize() /
 			TinySound.FORMAT.getChannels();
-		long byteIndex = this.reference.getLoopPosition();
+		long byteIndex = this.reference.getStartingLoopPosition();
+		return (byteIndex / (TinySound.FORMAT.getFrameRate() *
+			bytesPerChannelForFrame));
+	}
+	
+	/**
+	 * Get the loop position of this StreamMusic by sample frame.
+	 * @return loop position by sample frame
+	 */
+	@Override
+	public int getEndingLoopPositionByFrame() {
+		int bytesPerChannelForFrame = TinySound.FORMAT.getFrameSize() /
+			TinySound.FORMAT.getChannels();
+		long byteIndex = this.reference.getEndingLoopPosition();
+		return (int)(byteIndex / bytesPerChannelForFrame);
+	}
+
+	/**
+	 * Get the loop position of this StreamMusic by seconds.
+	 * @return loop position by seconds
+	 */
+	@Override
+	public double getEndingLoopPositionBySeconds() {
+		int bytesPerChannelForFrame = TinySound.FORMAT.getFrameSize() /
+			TinySound.FORMAT.getChannels();
+		long byteIndex = this.reference.getStartingLoopPosition();
 		return (byteIndex / (TinySound.FORMAT.getFrameRate() *
 			bytesPerChannelForFrame));
 	}
@@ -210,12 +235,13 @@ public class StreamMusic implements Music {
 	 * @param frameIndex sample frame loop position to set
 	 */
 	@Override
-	public void setLoopPositionByFrame(int frameIndex) {
+	public void setLoopPositionsByFrame(int startFrame, int endFrame) {
 		//get the byte index for a channel
 		int bytesPerChannelForFrame = TinySound.FORMAT.getFrameSize() /
 			TinySound.FORMAT.getChannels();
-		long byteIndex = (long)(frameIndex * bytesPerChannelForFrame);
-		this.reference.setLoopPosition(byteIndex);
+		long startIndex = (long) (startFrame * bytesPerChannelForFrame);
+		long endIndex = (long) (endFrame * bytesPerChannelForFrame);
+		this.reference.setLoopPositions(startIndex, endIndex);
 	}
 
 	/**
@@ -223,13 +249,15 @@ public class StreamMusic implements Music {
 	 * @param seconds loop position to set by seconds
 	 */
 	@Override
-	public void setLoopPositionBySeconds(double seconds) {
+	public void setLoopPositionsBySeconds(double startSeconds, double endSeconds) {
 		//get the byte index for a channel
 		int bytesPerChannelForFrame = TinySound.FORMAT.getFrameSize() /
 			TinySound.FORMAT.getChannels();
-		long byteIndex = (long)(seconds * TinySound.FORMAT.getFrameRate()) *
+		long startIndex = (long) (startSeconds * TinySound.FORMAT.getFrameRate()) *
 			bytesPerChannelForFrame;
-		this.reference.setLoopPosition(byteIndex);
+		long endIndex = (long) (endSeconds * TinySound.FORMAT.getFrameRate()) *
+			bytesPerChannelForFrame;
+		this.reference.setLoopPositions(startIndex, endIndex);
 	}
 	
 	/**
@@ -305,7 +333,8 @@ public class StreamMusic implements Music {
 		private byte[] skipBuf;
 		private boolean playing;
 		private boolean loop;
-		private long loopPosition;
+		private long startLoopPosition;
+		private long endLoopPosition;
 		private long position;
 		private double volume;
 		private double pan;
@@ -325,12 +354,13 @@ public class StreamMusic implements Music {
 		 * @throws IOException if a stream cannot be opened from the URL
 		 */
 		public StreamMusicReference(URL dataURL, boolean playing, boolean loop,
-				long loopPosition, long position, long numBytesPerChannel,
-				double volume, double pan) throws IOException {
+				long startLoopPosition, long endLoopPosition, long position,
+				long numBytesPerChannel, double volume, double pan) throws IOException {
 			this.url = dataURL;
 			this.playing = playing;
 			this.loop = loop;
-			this.loopPosition = loopPosition;
+			this.startLoopPosition = startLoopPosition;
+			this.endLoopPosition = endLoopPosition;
 			this.position = position;
 			this.numBytesPerChannel = numBytesPerChannel;
 			this.volume = volume;
@@ -373,8 +403,17 @@ public class StreamMusic implements Music {
 		 * @return loop-position byte index of this StreamMusicReference
 		 */
 		@Override
-		public synchronized long getLoopPosition() {
-			return this.loopPosition;
+		public synchronized long getStartingLoopPosition() {
+			return this.startLoopPosition;
+		}
+		
+		/**
+		 * Get the loop-position byte index of this StreamMusicReference.
+		 * @return loop-position byte index of this StreamMusicReference
+		 */
+		@Override
+		public synchronized long getEndingLoopPosition() {
+			return this.endLoopPosition;
 		}
 
 		/**
@@ -451,9 +490,13 @@ public class StreamMusic implements Music {
 		 * @param loopPosition the loop-position byte index to set
 		 */
 		@Override
-		public synchronized void setLoopPosition(long loopPosition) {
-			if (loopPosition >= 0 && loopPosition < this.numBytesPerChannel) {
-				this.loopPosition = loopPosition;
+		public synchronized void setLoopPositions(long startPosition, long endPosition) {
+			if (startPosition >= 0 && startPosition < this.numBytesPerChannel) {
+				this.startLoopPosition = startPosition;
+				this.endLoopPosition = this.numBytesPerChannel;
+			}
+			if (endPosition > this.startLoopPosition && endPosition < this.numBytesPerChannel) {
+			    	this.endLoopPosition = endPosition;
 			}
 		}
 
@@ -504,27 +547,23 @@ public class StreamMusic implements Music {
 		@Override
 		public synchronized void skipBytes(long num) {
 			//couple of shortcuts if we are going to complete the stream
-			if ((this.position + num) >= this.numBytesPerChannel) {
+		    	long nextPosition = this.position + num;
+		    	if (this.loop && nextPosition >= this.endLoopPosition) {
+        		    	this.fireEvent(MusicEvent.Action.LOOP);
+        			//compute the next position
+        			long loopLength = this.numBytesPerChannel - this.startLoopPosition;
+        			long bytesOver = (this.position + num) - this.numBytesPerChannel;
+        			nextPosition = this.startLoopPosition + (bytesOver % loopLength);
+        			//and set us there
+        			this.setPosition(nextPosition);
+        			return;
+		    	}
+		    	else if (nextPosition >= this.numBytesPerChannel) {
 				//if we're not looping, nothing special needs to happen
-				if (!this.loop) {
-					this.position += num;
-					//now stop since we're out
-					this.setPlaying(false);
-					return;
-				}
-				else {
-				    	this.fireEvent(MusicEvent.Action.LOOP);
-					//compute the next position
-					long loopLength = this.numBytesPerChannel -
-						this.loopPosition;
-					long bytesOver = (this.position + num) -
-						this.numBytesPerChannel;
-					long nextPosition = this.loopPosition +
-						(bytesOver % loopLength);
-					//and set us there
-					this.setPosition(nextPosition);
-					return;
-				}
+				this.position = nextPosition;
+				//now stop since we're out
+				this.setPlaying(false);
+				return;
 			}
 			//this is the number of bytes to skip per channel, so double it
 			long numSkip = num * 2;
@@ -606,15 +645,14 @@ public class StreamMusic implements Music {
 			else {
 				this.position += 2;
 			}
-			//wrap if looping, stop otherwise
-			if (this.position >= this.numBytesPerChannel) {
-				if (this.loop) {
-				    	this.fireEvent(MusicEvent.Action.LOOP);
-					this.setPosition(this.loopPosition);
-				}
-				else {
-					this.setPlaying(false);
-				}
+			//wrap if looping
+			if (this.loop && this.position >= this.endLoopPosition) {
+        			    this.fireEvent(MusicEvent.Action.LOOP);
+        			    this.setPosition(this.startLoopPosition);
+			}
+			//stop otherwise
+			else if (this.position >= this.numBytesPerChannel) {
+				this.setPlaying(false);
 			}
 		}
 
