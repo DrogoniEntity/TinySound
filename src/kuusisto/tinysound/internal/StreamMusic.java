@@ -32,7 +32,6 @@ import java.net.URL;
 
 import kuusisto.tinysound.Music;
 import kuusisto.tinysound.TinySound;
-import kuusisto.tinysound.event.EventAction;
 import kuusisto.tinysound.event.MusicEvent;
 
 /**
@@ -403,7 +402,7 @@ public class StreamMusic implements Music {
 		@Override
 		public synchronized void setPlaying(boolean playing) {
 		        if (this.playing != playing)
-		            this.fireEvent(playing ? EventAction.PLAY : EventAction.STOP);
+		            this.fireEvent(playing ? MusicEvent.Action.PLAY : MusicEvent.Action.STOP);
 			this.playing = playing;
 		}
 
@@ -514,6 +513,7 @@ public class StreamMusic implements Music {
 					return;
 				}
 				else {
+				    	this.fireEvent(MusicEvent.Action.LOOP);
 					//compute the next position
 					long loopLength = this.numBytesPerChannel -
 						this.loopPosition;
@@ -609,6 +609,7 @@ public class StreamMusic implements Music {
 			//wrap if looping, stop otherwise
 			if (this.position >= this.numBytesPerChannel) {
 				if (this.loop) {
+				    	this.fireEvent(MusicEvent.Action.LOOP);
 					this.setPosition(this.loopPosition);
 				}
 				else {
@@ -638,7 +639,7 @@ public class StreamMusic implements Music {
                  * fire to mixer's EventHandler.
                  * @param action event action
                  */
-		private void fireEvent(EventAction action)
+		private void fireEvent(MusicEvent.Action action)
 		{
 		    MusicEvent event = new MusicEvent(StreamMusic.this, action);
 		    StreamMusic.this.mixer.getEventHandler().fireMusicEvent(event);

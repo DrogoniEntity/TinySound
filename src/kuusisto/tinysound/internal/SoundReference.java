@@ -26,7 +26,7 @@
  */
 package kuusisto.tinysound.internal;
 
-import kuusisto.tinysound.event.EventAction;
+import kuusisto.tinysound.event.SoundEvent;
 
 /**
  * The SoundReference interface is the Mixer's interface to the audio data of a
@@ -86,5 +86,5 @@ public interface SoundReference {
 	 * @param handler event handler which manage listeners
 	 * @param action event's action
 	 */
-	public void fireEvent(EventHandler handler, EventAction action);
+	public void fireEvent(EventHandler handler, SoundEvent.Action action);
 }

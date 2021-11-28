@@ -44,7 +44,7 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
-import kuusisto.tinysound.event.TinySoundEventListener;
+import kuusisto.tinysound.event.SoundEventListener;
 import kuusisto.tinysound.internal.ByteList;
 import kuusisto.tinysound.internal.EventHandler;
 import kuusisto.tinysound.internal.MemMusic;
@@ -904,12 +904,12 @@ public class TinySound {
 		return null;
 	}
 	
-	public static void registerEventListener(TinySoundEventListener listener) throws NullPointerException
+	public static void registerEventListener(SoundEventListener listener) throws NullPointerException
 	{
 	    TinySound.listenersManager.registerListener(listener);
 	}
 	
-	public static void unregisterEventListener(TinySoundEventListener listener) throws NullPointerException
+	public static void unregisterEventListener(SoundEventListener listener) throws NullPointerException
 	{
 	    TinySound.listenersManager.unregisterListener(listener);
 	}

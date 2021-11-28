@@ -28,7 +28,6 @@ package kuusisto.tinysound.internal;
 
 import kuusisto.tinysound.Music;
 import kuusisto.tinysound.TinySound;
-import kuusisto.tinysound.event.EventAction;
 import kuusisto.tinysound.event.MusicEvent;
 
 /**
@@ -392,7 +391,7 @@ public class MemMusic implements Music {
 		public synchronized void setPlaying(boolean playing) {
     		        //fire event when value changed !
     		        if (this.playing != playing)
-    		                this.fireEvent(playing ? EventAction.PLAY : EventAction.STOP);
+    		                this.fireEvent(playing ? MusicEvent.Action.PLAY : MusicEvent.Action.STOP);
 			this.playing = playing;
 		}
 		
@@ -478,6 +477,7 @@ public class MemMusic implements Music {
 				//wrap if looping, stop otherwise
 				if (this.position >= this.left.length) {
 					if (this.loop) {
+					    	this.fireEvent(MusicEvent.Action.LOOP);
 						this.position = this.loopPosition;
 					}
 					else {
@@ -516,6 +516,7 @@ public class MemMusic implements Music {
 			//wrap if looping, stop otherwise
 			if (this.position >= this.left.length) {
 				if (this.loop) {
+				    this.fireEvent(MusicEvent.Action.LOOP);
 					this.position = this.loopPosition;
 				}
 				else {
@@ -541,7 +542,7 @@ public class MemMusic implements Music {
 		 * fire to mixer's EventHandler.
 		 * @param action event action
 		 */
-		private void fireEvent(EventAction action)
+		private void fireEvent(MusicEvent.Action action)
 		{
 		    MusicEvent event = new MusicEvent(MemMusic.this, action);
                     MemMusic.this.mixer.getEventHandler().fireMusicEvent(event);

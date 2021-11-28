@@ -31,9 +31,9 @@ import kuusisto.tinysound.Music;
 public final class MusicEvent
 {
     private final Music music;
-    private final EventAction action;
+    private final MusicEvent.Action action;
     
-    public MusicEvent(Music music, EventAction action)
+    public MusicEvent(Music music, MusicEvent.Action action)
     {
         this.music = music;
         this.action = action;
@@ -44,8 +44,12 @@ public final class MusicEvent
         return this.music;
     }
     
-    public EventAction getAction()
+    public MusicEvent.Action getAction()
     {
         return this.action;
+    }
+    
+    public static enum Action {
+	PLAY, STOP, LOOP;
     }
 }

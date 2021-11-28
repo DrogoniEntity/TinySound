@@ -27,7 +27,6 @@
 package kuusisto.tinysound.internal;
 
 import kuusisto.tinysound.Sound;
-import kuusisto.tinysound.event.EventAction;
 import kuusisto.tinysound.event.SoundEvent;
 
 /**
@@ -234,7 +233,7 @@ public class MemSound implements Sound {
 		}
 		
 		@Override
-		public void fireEvent(EventHandler handler, EventAction action)
+		public void fireEvent(EventHandler handler, SoundEvent.Action action)
                 {
                     SoundEvent event = new SoundEvent(MemSound.this, action);
                     handler.fireSoundEvent(event);
