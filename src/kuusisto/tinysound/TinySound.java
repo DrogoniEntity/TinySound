@@ -555,17 +555,90 @@ public class TinySound {
 	    StreamInfo info = TinySound.createFileStream(data);
 	    
 	    // try to create it
-	    StreamSound ss = null;
-	    try {
-		ss = new StreamSound(info.URL, info.NUM_BYTES_PER_CHANNEL, this.mixer, this.soundCount);
-		this.soundCount++;
-	    } catch (IOException e) {
-		throw new IOException("Failed to create StreamSound!", e);
-	    }
-	    return ss;
+	    this.soundCount++;
+	    return new StreamSound(info.URL, info.NUM_BYTES_PER_CHANNEL, this.mixer, this.soundCount);
 	}
 	// construct the Sound object
 	this.soundCount++;
+	return new MemSound(data[0], data[1], this.mixer, this.soundCount);
+    }
+    
+    /**
+     * Load a Sound by a InpuStream. This will store data from memory.
+     * 
+     * @param stream         Sound's resource stream
+     * @return Music from InpuStream as specified
+     * @throws NullPointerException if stream is null
+     * @throws UnsupportedAudioFileException if requested audio couldn't be used
+     * @throws IOException if something went wrong during music loading
+     */
+    public Sound loadSound(InputStream stream) throws NullPointerException, UnsupportedAudioFileException, IOException
+    {
+	return this.loadSound(stream, false);
+    }
+    
+    /**
+     * Load a Sound by a InpuStream.
+     * 
+     * @param stream         Music's resource stream
+     * @param streamFromFile true if this Music should be streamed from a temporary
+     *                       file to reduce memory overhead
+     * @return Sound from InputStream as specified
+     * @throws NullPointerException if stream is null
+     * @throws UnsupportedAudioFileException if requested audio couldn't be used
+     * @throws IOException if something went wrong during music loading
+     */
+    public Sound loadSound(InputStream stream, boolean streamFromFile) throws NullPointerException, UnsupportedAudioFileException, IOException  {
+	if (stream == null)
+	    throw new NullPointerException("stream is null");
+	
+	// getting audio stream
+	AudioInputStream audioStream = AudioSystem.getAudioInputStream(stream);
+	return this.loadSound(audioStream, streamFromFile);	
+    }
+    
+    /**
+     * Load a Sound by a AudioInpuStream. This will store data from memory.
+     * 
+     * @param stream         Sound's resource stream
+     * @return Sound from InputStream as specified
+     * @throws NullPointerException if audioStream is null
+     * @throws UnsupportedAudioFileException if requested audio couldn't be used
+     * @throws IOException if something went wrong during music loading
+     */
+    public Sound loadSound(AudioInputStream audioStream) throws NullPointerException, UnsupportedAudioFileException, IOException {
+	return this.loadSound(audioStream, false);
+    }
+    
+    /**
+     * Load a Music by a AudioInpuStream.
+     * 
+     * @param stream         Sound's resource stream
+     * @param streamFromFile true if this Sound should be streamed from a temporary
+     *                       file to reduce memory overhead
+     * @return Sound from InputStream as specified
+     * @throws NullPointerException if url is null
+     * @throws UnsupportedAudioFileException if requested audio couldn't be used
+     * @throws IOException if something went wrong during music loading
+     */
+    public Sound loadSound(AudioInputStream audioStream, boolean streamFromFile) throws NullPointerException, UnsupportedAudioFileException, IOException {
+	if (audioStream == null)
+	    throw new NullPointerException("stream is null");
+	
+	// convert it
+	audioStream = TinySound.convertAudioStream(audioStream);
+	
+	// try to read all the bytes
+	byte[][] data = TinySound.readAllBytes(audioStream);
+	
+	// handle differently if streaming from a file
+	if (streamFromFile) {
+	    StreamInfo info = TinySound.createFileStream(data);
+	    this.soundCount++;
+	    return new StreamSound(info.URL, info.NUM_BYTES_PER_CHANNEL, this.mixer, this.soundCount);
+	}
+	
+	// construct the Music object and register it with the mixer
 	return new MemSound(data[0], data[1], this.mixer, this.soundCount);
     }
 
