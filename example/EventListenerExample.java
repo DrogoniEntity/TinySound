@@ -1,4 +1,3 @@
-import java.io.File;
 import java.util.Random;
 
 import kuusisto.tinysound.Music;
@@ -7,6 +6,7 @@ import kuusisto.tinysound.TinySound;
 import kuusisto.tinysound.event.MusicEvent;
 import kuusisto.tinysound.event.SoundEvent;
 import kuusisto.tinysound.event.SoundEventListener;
+import sun.applet.Main;
 
 public class EventListenerExample {
     private static boolean running;
@@ -17,8 +17,8 @@ public class EventListenerExample {
 	lib.registerEventListener(new MyEventListener());
 
 	//loading resources
-	Music music = lib.loadMusic(new File("groundtheme.wav"));
-	Sound sound = lib.loadSound(new File("jump.wav"));
+	Music music = lib.loadMusic(Main.class.getResourceAsStream("/groundtheme.wav"));
+	Sound sound = lib.loadSound(Main.class.getResourceAsStream("/jump.wav"));
 	
 	//setting up loop
 	music.setLoopPositionsByFrame(0, -1);

@@ -4,7 +4,7 @@ import kuusisto.tinysound.TinySound;
 
 public class TinySoundExample {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Throwable {
 		//initialize TinySound
 		TinySound lib = TinySound.init();
 		//load a sound and music
