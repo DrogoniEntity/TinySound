@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -348,16 +349,86 @@ public class TinySound {
 	// handle differently if streaming from a file
 	if (streamFromFile) {
 	    StreamInfo info = TinySound.createFileStream(data);
-	    
-	    // try to create it
-	    StreamMusic sm = null;
-	    try {
-		sm = new StreamMusic(info.URL, info.NUM_BYTES_PER_CHANNEL, this.mixer);
-	    } catch (IOException e) {
-		System.err.println("Failed to create StreamMusic!");
-	    }
-	    return sm;
+	    return new StreamMusic(info.URL, info.NUM_BYTES_PER_CHANNEL, this.mixer);
 	}
+	// construct the Music object and register it with the mixer
+	return new MemMusic(data[0], data[1], this.mixer);
+    }
+    
+    /**
+     * Load a Music by a InpuStream. This will store data from memory.
+     * 
+     * @param stream         Music's resource stream
+     * @return Music from InpuStream as specified
+     * @throws NullPointerException if stream is null
+     * @throws UnsupportedAudioFileException if requested audio couldn't be used
+     * @throws IOException if something went wrong during music loading
+     */
+    public Music loadMusic(InputStream stream) throws NullPointerException, UnsupportedAudioFileException, IOException
+    {
+	return this.loadMusic(stream, false);
+    }
+    
+    /**
+     * Load a Music by a InpuStream.
+     * 
+     * @param stream         Music's resource stream
+     * @param streamFromFile true if this Music should be streamed from a temporary
+     *                       file to reduce memory overhead
+     * @return Music from URL as specified
+     * @throws NullPointerException if url is null
+     * @throws UnsupportedAudioFileException if requested audio couldn't be used
+     * @throws IOException if something went wrong during music loading
+     */
+    public Music loadMusic(InputStream stream, boolean streamFromFile) throws NullPointerException, UnsupportedAudioFileException, IOException  {
+	if (stream == null)
+	    throw new NullPointerException("stream is null");
+	
+	// getting audio stream
+	AudioInputStream audioStream = AudioSystem.getAudioInputStream(stream);
+	return this.loadMusic(audioStream, streamFromFile);	
+    }
+    
+    /**
+     * Load a Music by a AudioInpuStream. This will store data from memory.
+     * 
+     * @param stream         Music's resource stream
+     * @return Music from URL as specified
+     * @throws NullPointerException if url is null
+     * @throws UnsupportedAudioFileException if requested audio couldn't be used
+     * @throws IOException if something went wrong during music loading
+     */
+    public Music loadMusic(AudioInputStream audioStream) throws NullPointerException, UnsupportedAudioFileException, IOException {
+	return this.loadMusic(audioStream, false);
+    }
+    
+    /**
+     * Load a Music by a AudioInpuStream.
+     * 
+     * @param stream         Music's resource stream
+     * @param streamFromFile true if this Music should be streamed from a temporary
+     *                       file to reduce memory overhead
+     * @return Music from URL as specified
+     * @throws NullPointerException if url is null
+     * @throws UnsupportedAudioFileException if requested audio couldn't be used
+     * @throws IOException if something went wrong during music loading
+     */
+    public Music loadMusic(AudioInputStream audioStream, boolean streamFromFile) throws NullPointerException, UnsupportedAudioFileException, IOException {
+	if (audioStream == null)
+	    throw new NullPointerException("stream is null");
+	
+	// convert it
+	audioStream = TinySound.convertAudioStream(audioStream);
+	
+	// try to read all the bytes
+	byte[][] data = TinySound.readAllBytes(audioStream);
+	
+	// handle differently if streaming from a file
+	if (streamFromFile) {
+	    StreamInfo info = TinySound.createFileStream(data);
+	    return new StreamMusic(info.URL, info.NUM_BYTES_PER_CHANNEL, this.mixer);
+	}
+	
 	// construct the Music object and register it with the mixer
 	return new MemMusic(data[0], data[1], this.mixer);
     }
